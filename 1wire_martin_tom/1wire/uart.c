@@ -208,7 +208,8 @@ static volatile unsigned char UART1_LastRxError;
 #endif
 
 
-SIGNAL(UART0_RECEIVE_INTERRUPT)
+ISR(USART_RX_vect)
+//SIGNAL(UART0_RECEIVE_INTERRUPT)
 /*************************************************************************
 Function: UART Receive Complete interrupt
 Purpose:  called when the UART has received a character
@@ -249,7 +250,8 @@ Purpose:  called when the UART has received a character
 }
 
 
-SIGNAL(UART0_TRANSMIT_INTERRUPT)
+ISR(USART_UDRE_vect)
+//SIGNAL(UART0_TRANSMIT_INTERRUPT)
 /*************************************************************************
 Function: UART Data Register Empty interrupt
 Purpose:  called when the UART is ready to transmit the next byte

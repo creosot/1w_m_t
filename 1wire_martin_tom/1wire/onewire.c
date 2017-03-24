@@ -100,7 +100,7 @@ uint8_t ow_reset(void)
 		err = 1;             // short circuit, expected low but got high
 	}
 	
-	return err;
+	return err; //err=0 -sensor got job
 }
 
 
