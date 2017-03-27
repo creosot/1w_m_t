@@ -61,6 +61,23 @@
 #define NEWLINESTR "\r\n"
 
 uint8_t gSensorIDs[MAXSENSORS][OW_ROMCODE_SIZE];
+<<<<<<< HEAD
+=======
+uint8_t number[][2] = {		//portb,portd
+	{0b00111010, 0b01100000},	//0
+	{0b00001010, 0b00000000},	//1
+	{0b00101100, 0b01100000},	//2
+	{0b00101110, 0b01000000},	//3
+	{0b00011110, 0b00000000},	//4
+	{0b00110110, 0b01000000},	//5
+	{0b00110110, 0b01100000},	//6
+	{0b00101010, 0b00000000},	//7
+	{0b00111110, 0b01100000},	//8
+	{0b00111110, 0b01000000}	//9
+};
+uint8_t digit[4] = {0b00000001, 0b00000010, 0b00000100, 0b00001000};	//1,2,3,4
+
+>>>>>>> d8263051c3345811081c0687853f2765bd2ca902
 
 static uint8_t search_sensors(void)
 {
@@ -156,6 +173,39 @@ static void eeprom_test(void)
 }
 #endif /* DS18X20_EEPROMSUPPORT */
 
+<<<<<<< HEAD
+=======
+void setNumber(uint8_t num, uint8_t dig){
+	if (num>9 || dig>3) return;
+	PORTB &= 0b11000000 | number[num][0];
+	PORTB |= number[num][0];
+	PORTD &= 0b10011111 | number[num][1];
+	PORTD |= number[num][1];
+	PORTC &= 0b11110000;
+	PORTC |= digit[dig];
+}
+
+void initDisplay(){
+	DDRB |= 0b00111111;
+	DDRD |= 0b01100000;
+	DDRC |= 0b00001111;
+}
+
+void initTimer1(){
+	TCNT1 = 0;
+	OCR1A = 1;
+	TCCR1A = 0;
+	TCCR1A |= (0 << WGM11) | (0 << WGM10); //mode CTC
+	TCCR1B |= (0 << WGM13) | (1 << WGM12) |(0 << CS12) | (1 << CS11) | (1 << CS10); //mode CTC, clk/64
+	TIMSK1 |= (1 << OCIE1A); //Output Compare A Match Interrupt Enable
+	sei(); //разрешаем прерывания	 
+}
+
+ISR(TIMER1_COMPA_vect){
+	
+}
+
+>>>>>>> d8263051c3345811081c0687853f2765bd2ca902
 
 int main(void)
 {
@@ -242,6 +292,7 @@ int main(void)
 			uart_puts_P( NEWLINESTR );
 			uart_put_temp( decicelsius );
 			uart_puts_P( NEWLINESTR );
+<<<<<<< HEAD
 		}	
 
     while (1) 
@@ -252,6 +303,21 @@ int main(void)
 		PORTD |= 0b01100000;
 		DDRC |= 0b00001111;
 		PORTC |= 0b00001111;
+=======
+		}
+		
+		initDisplay();
+		initTimer1();
+
+    while (1) 
+    {
+
+		for (uint8_t i=0; i<10; i++){
+			setNumber(i, 2);
+			_delay_ms(1000);
+		}
+
+>>>>>>> d8263051c3345811081c0687853f2765bd2ca902
     }
 }
 
