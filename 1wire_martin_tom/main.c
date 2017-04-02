@@ -94,13 +94,15 @@ uint8_t number[MAXNUMBER][2] = {		//portb,portd
 #define BUTTON_UP 1
 #define BUTTON1 0
 #define BUTTON2 1
+#define ALARM_HEAT 300
 uint8_t digit[4] = {0b00000001, 0b00000010, 0b00000100, 0b00001000};	//1,2,3,4
 static uint8_t temperature[4] = {0};
 static volatile uint8_t counterDigit = 0;
 static int16_t decicelsius = 0;
-static int16_t limitHigh = 250;
-static int16_t limitLow = 235;
-static uint8_t mode = 0;
+static int16_t limitHigh = 260;
+static int16_t limitLow = 250;
+static volatile uint8_t mode = 0;
+static volatile uint8_t heatStatus = 0;
 uint8_t buttonPrefState[2] = {(1<<PORTC4), (1<<PORTC5)}; //PC4,PC5
 uint8_t buttonMask[2] = {(1<<PORTC4), (1<<PORTC5)}; //PC4,PC5
 uint8_t buttonDebounceState[2] = {0,0};
@@ -109,7 +111,8 @@ uint8_t buttonStateON[2] = {0,0};
 uint8_t buttonStateOFF[2] = {0,0};
 static volatile unsigned long timer1_millis = 0;
 static long milliseconds_since = 0;
-static long milliseconds_since1 = 0;
+static uint8_t err = 0;
+static volatile uint8_t temp = 0;
 
 #if DS18X20_EEPROMSUPPORT
 static void th_tl_dump(uint8_t *sp);
@@ -125,8 +128,9 @@ void initTimer0();
 void initButton();
 void initGenerator();
 void setNumber(uint8_t num, uint8_t dig);
-void convertTempToDigit(uint16_t t);
+void convertTempToDigit(uint16_t t, uint8_t mode);
 void getButtonState(uint8_t but);
+void handleError(uint8_t *e);
 
 void readTempForOnlyDS18b20(){
 	DS18X20_start_meas( DS18X20_POWER_EXTERN, NULL ); //start measure
@@ -140,6 +144,13 @@ ISR (TIMER1_COMPA_vect){
 
 ISR(TIMER0_COMPA_vect){
 	counterDigit &= 0b00000011;
+	temp += 1;
+	if (!counterDigit){
+		if (heatStatus && mode == NORMAL){
+			if (temp & 0b10000000) temperature[0] = DEFIS_HEAT;
+			else temperature[0] = CLEAR;
+		}
+	}
 	setNumber(temperature[counterDigit], counterDigit);
 	counterDigit += 1;
 }
@@ -147,7 +158,6 @@ ISR(TIMER0_COMPA_vect){
 int main(void)
 {
 	uint8_t nSensors, i;
-	uint8_t err = 0;
 		
 	uart_init((UART_BAUD_SELECT((BAUD),F_CPU)));
 		
@@ -208,81 +218,70 @@ int main(void)
 	initTimer0();
 	initTimer1();
 	initButton();
-	uint8_t temp = 0;
 	mode = NORMAL;
 	_delay_ms(1000);
-	
-	while(err){
-		ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-			temperature[0] = E;
-			temperature[1] = r;
-			temperature[2] = r;
-			temperature[3] = 1;
-		}
-		_delay_ms(1000);
-	}
 		
     while (1) {
-		if (mode == NORMAL){
+		handleError(&err);	
+		getButtonState(BUTTON1);	
+		if (buttonStateON[BUTTON1]){
+			buttonStateON[BUTTON1] = 0;
+			mode += 1;
+			if (mode == 4) mode = NORMAL;
+		}
+		
+		switch (mode){
+		case NORMAL:
 			if (millis() - milliseconds_since > 999){
 				milliseconds_since = millis();
 				readTempForOnlyDS18b20();
-				convertTempToDigit(decicelsius);
+				convertTempToDigit(decicelsius, mode);
 				uart_puts_P( NEWLINESTR );
 				uart_put_temp( decicelsius );
-				uart_puts_P( NEWLINESTR );		
+				uart_puts_P( NEWLINESTR );
 			}
-			while(decicelsius > 270){
+			if (decicelsius > ALARM_HEAT){
 				err = 2;
-				ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-					temperature[0] = E;
-					temperature[1] = r;
-					temperature[2] = r;
-					temperature[3] = 3;
-				}
-				readTempForOnlyDS18b20();
-				_delay_ms(500);
 			}
 			if (decicelsius < limitLow){ //heat on
-				if (millis() - milliseconds_since1 > 249){
-					milliseconds_since1 = millis();
-					temp ^= 1;
-					temperature[0] = temp + 10;
-				}
+				heatStatus = 1;
 			}
 			if (decicelsius > limitHigh){ //cool on
-				temperature[0] = 10;
+				heatStatus = 0;
 			}
 			if (decicelsius > limitLow && decicelsius < limitHigh){ //cool on
 				
 			}
-		}
-		
-		getButtonState(BUTTON1);
-
-		if (buttonStateON[BUTTON1]){
-			if (mode == NORMAL){
-				buttonStateON[BUTTON1] = 0;
-				mode = HIGH;
-				convertTempToDigit(limitHigh);
-				temperature[0] = DEFIS_UP;
-			}
-		}
-		if (buttonStateON[BUTTON1]){
-			if (mode == HIGH){
-				buttonStateON[BUTTON1] = 0;
-				mode = LOW;
-				convertTempToDigit(limitLow);
-				temperature[0] = DEFIS_DOWN;
-			}
-		}
-		if (buttonStateON[BUTTON1]){
-			if (mode == LOW){
-				buttonStateON[BUTTON1] = 0;
-				mode = NORMAL;
-			}
+			break;		
+		case HIGH:
+			convertTempToDigit(limitHigh, mode);
+			break;		
+		case LOW:
+			convertTempToDigit(limitLow, mode);
+			break;	
+		default:
+			break;
 		}
     }
+}
+
+void handleError(uint8_t *err){
+	while(*err){
+		ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+			temperature[0] = E;
+			temperature[1] = r;
+			temperature[2] = r;
+			temperature[3] = *err;
+		}
+		if (*err == 2){
+			readTempForOnlyDS18b20();
+			if (decicelsius < ALARM_HEAT){
+				*err = 0;
+				break;;
+			}
+		}
+		_delay_ms(1000);
+	}
 }
 
 void demo_sensor(){
@@ -459,7 +458,7 @@ void setNumber(uint8_t num, uint8_t dig){
 	PORTC |= digit[dig];
 }
 
-void convertTempToDigit(uint16_t t){
+void convertTempToDigit(uint16_t t, uint8_t mode){
 	uint16_t temp, d1, d2, d3, d4;
 	temp = t;
 	d4 = temp/1000;
@@ -469,8 +468,20 @@ void convertTempToDigit(uint16_t t){
 	temp = temp - d3*100;
 	d2 = temp/10;
 	d1 = temp - d2*10;
-	if (d3 == 0 && d4 == 0) d3 = CLEAR; 
-	if (d4 == 0) d4 = CLEAR;
+	switch (mode){
+		case NORMAL:
+			if (d3 == 0 && d4 == 0) d3 = CLEAR;
+			if (d4 == 0) d4 = CLEAR;
+			break;
+		case HIGH:
+			d4 = DEFIS_UP;
+			break;
+		case LOW:
+			d4 = DEFIS_DOWN;
+			break;
+		default:
+			break;
+	}
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 		temperature[0] = (uint8_t)d4;
 		temperature[1] = (uint8_t)d3;
