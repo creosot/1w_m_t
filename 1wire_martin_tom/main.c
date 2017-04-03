@@ -80,6 +80,11 @@ uint8_t number[MAXNUMBER][2] = {		//portb,portd
 	{0b00000100, 0b00100000}	//16 - r
 };
 
+#define NO_ERROR 0
+#define NO_SENSOR_START 1
+#define NO_SENSOR_AFTER_START 2
+#define TEMP_OVERHEAT 3
+#define WDT_ERROR 4
 #define CLEAR 10
 #define DEFIS_HEAT 11
 #define MINUS 12
@@ -87,9 +92,10 @@ uint8_t number[MAXNUMBER][2] = {		//portb,portd
 #define DEFIS_DOWN 14
 #define E 15
 #define r 16
-#define NORMAL 1
-#define HIGH 2
-#define LOW 3
+#define MODE_ERROR 0
+#define MODE_NORMAL 1
+#define MODE_HIGH 2
+#define MODE_LOW 3
 #define BUTTON_DOWN 0
 #define BUTTON_UP 1
 #define BUTTON1 0
@@ -111,7 +117,7 @@ uint8_t buttonStateON[2] = {0,0};
 uint8_t buttonStateOFF[2] = {0,0};
 static volatile unsigned long timer1_millis = 0;
 static long milliseconds_since = 0;
-static uint8_t err = 0;
+static volatile uint8_t err = 0;
 static volatile uint8_t temp = 0;
 
 #if DS18X20_EEPROMSUPPORT
@@ -127,10 +133,12 @@ void initTimer1();
 void initTimer0();
 void initButton();
 void initGenerator();
+void initWDT();
+void disableWDT();
 void setNumber(uint8_t num, uint8_t dig);
 void convertTempToDigit(uint16_t t, uint8_t mode);
 void getButtonState(uint8_t but);
-void handleError(uint8_t *e);
+void handleError(uint8_t e);
 
 void readTempForOnlyDS18b20(){
 	DS18X20_start_meas( DS18X20_POWER_EXTERN, NULL ); //start measure
@@ -146,13 +154,19 @@ ISR(TIMER0_COMPA_vect){
 	counterDigit &= 0b00000011;
 	temp += 1;
 	if (!counterDigit){
-		if (heatStatus && mode == NORMAL){
+		if (heatStatus && mode == MODE_NORMAL){
 			if (temp & 0b10000000) temperature[0] = DEFIS_HEAT;
 			else temperature[0] = CLEAR;
 		}
 	}
 	setNumber(temperature[counterDigit], counterDigit);
 	counterDigit += 1;
+}
+
+ISR(WDT_vect){
+	wdt_disable();
+	mode = MODE_ERROR;
+	err = WDT_ERROR;
 }
 
 int main(void)
@@ -218,24 +232,26 @@ int main(void)
 	initTimer0();
 	initTimer1();
 	initButton();
-	mode = NORMAL;
+	mode = MODE_NORMAL;
 	_delay_ms(1000);
+	initWDT();
 		
     while (1) {
-		handleError(&err);	
+		handleError(err);	
 		getButtonState(BUTTON1);	
 		if (buttonStateON[BUTTON1]){
 			buttonStateON[BUTTON1] = 0;
 			mode += 1;
-			if (mode == 4) mode = NORMAL;
+			if (mode == 4) mode = MODE_NORMAL;
 		}
 		
 		switch (mode){
-		case NORMAL:
+		case MODE_NORMAL:
 			if (millis() - milliseconds_since > 999){
 				milliseconds_since = millis();
 				readTempForOnlyDS18b20();
 				convertTempToDigit(decicelsius, mode);
+				wdt_reset();
 				uart_puts_P( NEWLINESTR );
 				uart_put_temp( decicelsius );
 				uart_puts_P( NEWLINESTR );
@@ -253,11 +269,13 @@ int main(void)
 				
 			}
 			break;		
-		case HIGH:
+		case MODE_HIGH:
 			convertTempToDigit(limitHigh, mode);
+			wdt_reset();
 			break;		
-		case LOW:
+		case MODE_LOW:
 			convertTempToDigit(limitLow, mode);
+			wdt_reset();
 			break;	
 		default:
 			break;
@@ -265,22 +283,16 @@ int main(void)
     }
 }
 
-void handleError(uint8_t *err){
-	while(*err){
+void handleError(uint8_t err){
+	while(err){
+		disableWDT();
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 			temperature[0] = E;
 			temperature[1] = r;
 			temperature[2] = r;
-			temperature[3] = *err;
+			temperature[3] = err;
 		}
-		if (*err == 2){
-			readTempForOnlyDS18b20();
-			if (decicelsius < ALARM_HEAT){
-				*err = 0;
-				break;;
-			}
-		}
-		_delay_ms(1000);
+		_delay_ms(2000);
 	}
 }
 
@@ -395,6 +407,18 @@ unsigned long millis (){
 	return millis_return;
 }
 
+void initWDT(){
+	wdt_enable(WDTO_4S); //reset 4s
+	wdt_reset();
+	WDTCSR |= 1 << WDIE; //enable wdt_interrupt
+}
+
+void disableWDT(){
+	wdt_reset();
+	wdt_disable();
+	WDTCSR &= ~(1 << WDIE); //disable wdt_interrupt
+}
+
 void initButton(){
 	DDRC &= ~((1 << PORTC4) | (1 << PORTC5)); //input
 	PORTC |= (1 << PORTC4) | (1 << PORTC5); //pull up
@@ -469,14 +493,14 @@ void convertTempToDigit(uint16_t t, uint8_t mode){
 	d2 = temp/10;
 	d1 = temp - d2*10;
 	switch (mode){
-		case NORMAL:
+		case MODE_NORMAL:
 			if (d3 == 0 && d4 == 0) d3 = CLEAR;
 			if (d4 == 0) d4 = CLEAR;
 			break;
-		case HIGH:
+		case MODE_HIGH:
 			d4 = DEFIS_UP;
 			break;
-		case LOW:
+		case MODE_LOW:
 			d4 = DEFIS_DOWN;
 			break;
 		default:
