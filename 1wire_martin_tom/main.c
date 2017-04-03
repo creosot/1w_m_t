@@ -80,11 +80,16 @@ uint8_t number[MAXNUMBER][2] = {		//portb,portd
 	{0b00000100, 0b00100000}	//16 - r
 };
 
+/* return values */
+// #define DS18X20_OK                0x00
+// #define DS18X20_ERROR             0x01
+// #define DS18X20_START_FAIL        0x02
+// #define DS18X20_ERROR_CRC         0x03
 #define NO_ERROR 0
-#define NO_SENSOR_START 1
-#define NO_SENSOR_AFTER_START 2
-#define TEMP_OVERHEAT 3
-#define WDT_ERROR 4
+#define ERROR_NO_SENSOR_START 1
+#define ERROR_NO_SENSOR_AFTER_START 2
+#define ERROR_TEMP_OVERHEAT 3
+#define ERROR_WDT 4
 #define CLEAR 10
 #define DEFIS_HEAT 11
 #define MINUS 12
@@ -92,6 +97,8 @@ uint8_t number[MAXNUMBER][2] = {		//portb,portd
 #define DEFIS_DOWN 14
 #define E 15
 #define r 16
+#define HEAT_ON 1
+#define HEAT_OFF 0
 #define MODE_ERROR 0
 #define MODE_NORMAL 1
 #define MODE_HIGH 2
@@ -117,8 +124,9 @@ uint8_t buttonStateON[2] = {0,0};
 uint8_t buttonStateOFF[2] = {0,0};
 static volatile unsigned long timer1_millis = 0;
 static long milliseconds_since = 0;
-static volatile uint8_t err = 0;
+static volatile uint8_t err = NO_ERROR;
 static volatile uint8_t temp = 0;
+
 
 #if DS18X20_EEPROMSUPPORT
 static void th_tl_dump(uint8_t *sp);
@@ -140,12 +148,6 @@ void convertTempToDigit(uint16_t t, uint8_t mode);
 void getButtonState(uint8_t but);
 void handleError(uint8_t e);
 
-void readTempForOnlyDS18b20(){
-	DS18X20_start_meas( DS18X20_POWER_EXTERN, NULL ); //start measure
-	_delay_ms( DS18B20_TCONV_12BIT ); //delay for measure
-	DS18X20_read_decicelsius_single( gSensorIDs[0][0], &decicelsius );
-}
-
 ISR (TIMER1_COMPA_vect){
 	timer1_millis++;
 }
@@ -154,7 +156,7 @@ ISR(TIMER0_COMPA_vect){
 	counterDigit &= 0b00000011;
 	temp += 1;
 	if (!counterDigit){
-		if (heatStatus && mode == MODE_NORMAL){
+		if (heatStatus == HEAT_ON && mode == MODE_NORMAL){
 			if (temp & 0b10000000) temperature[0] = DEFIS_HEAT;
 			else temperature[0] = CLEAR;
 		}
@@ -165,9 +167,53 @@ ISR(TIMER0_COMPA_vect){
 
 ISR(WDT_vect){
 	wdt_disable();
-	mode = MODE_ERROR;
-	err = WDT_ERROR;
+	err = ERROR_WDT;
 }
+
+// void readTempForOnlyDS18b20(){
+// 	uint8_t i, x;
+// 	for (i = 10; i; i--){
+// 		uart_puts_P( NEWLINESTR );
+// 		uart_puthex_byte(i);
+// 		uart_puts_P( NEWLINESTR );
+// 		wdt_reset();
+// 		err = ERROR_NO_SENSOR_AFTER_START;
+// 		for (x = 10; x; x--){
+// 			uart_puthex_byte(x | 0b00010000);
+// 			uart_puts_P( NEWLINESTR );
+// 			if (DS18X20_start_meas(DS18X20_POWER_EXTERN, NULL) == DS18X20_OK){ //start measure
+// 				err = NO_ERROR;
+// 				break;
+// 			}
+// 			_delay_ms(200);	
+// 		}
+// 		
+// 		if (err == ERROR_NO_SENSOR_AFTER_START) return;
+// 		
+// 		_delay_ms( DS18B20_TCONV_12BIT ); //delay for measure
+// 		
+// 		if (DS18X20_read_decicelsius_single( gSensorIDs[0][0], &decicelsius ) == DS18X20_OK){
+// 			err = NO_ERROR;
+// 			return;
+// 		}
+// 	}
+// }
+
+void readTempForOnlyDS18b20(){
+	uint8_t i, err1, err2;
+	for (i = 10; i; i--){
+		wdt_reset();
+		err1 = DS18X20_start_meas(DS18X20_POWER_EXTERN, NULL); //start measure
+		_delay_ms( DS18B20_TCONV_12BIT ); //delay for measure
+		err2 = DS18X20_read_decicelsius_single( gSensorIDs[0][0], &decicelsius );
+		if (err1 == DS18X20_OK && err2 == DS18X20_OK){
+			return;
+		}
+		_delay_ms(200);
+	}
+	err = ERROR_NO_SENSOR_AFTER_START;
+}
+
 
 int main(void)
 {
@@ -186,7 +232,7 @@ int main(void)
 		
 	nSensors = search_sensors();
 	if (nSensors == 0){
-		err = 1;
+		err = ERROR_NO_SENSOR_START;
 	}
 	uart_put_int( (int)nSensors );
 	uart_puts_P( " DS18X20 Sensor(s) available:" NEWLINESTR );
@@ -252,18 +298,18 @@ int main(void)
 				readTempForOnlyDS18b20();
 				convertTempToDigit(decicelsius, mode);
 				wdt_reset();
-				uart_puts_P( NEWLINESTR );
-				uart_put_temp( decicelsius );
-				uart_puts_P( NEWLINESTR );
+// 				uart_puts_P( NEWLINESTR );
+// 				uart_put_temp( decicelsius );
+// 				uart_puts_P( NEWLINESTR );
 			}
 			if (decicelsius > ALARM_HEAT){
-				err = 2;
+				err = ERROR_TEMP_OVERHEAT;
 			}
 			if (decicelsius < limitLow){ //heat on
-				heatStatus = 1;
+				heatStatus = HEAT_ON;
 			}
 			if (decicelsius > limitHigh){ //cool on
-				heatStatus = 0;
+				heatStatus = HEAT_OFF;
 			}
 			if (decicelsius > limitLow && decicelsius < limitHigh){ //cool on
 				
@@ -286,6 +332,7 @@ int main(void)
 void handleError(uint8_t err){
 	while(err){
 		disableWDT();
+		mode = MODE_ERROR;
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 			temperature[0] = E;
 			temperature[1] = r;
