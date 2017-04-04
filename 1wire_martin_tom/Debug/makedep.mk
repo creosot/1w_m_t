@@ -10,7 +10,3 @@
 
 main.c
 
-uart\uart.c
-
-uart\uart_addon.c
-

@@ -15,7 +15,7 @@ extern "C" {
 // max. resolution functions disabled(0) or enabled(1):
 #define DS18X20_MAX_RESOLUTION    1
 // extended output via UART disabled(0) or enabled(1) :
-#define DS18X20_VERBOSE           1
+#define DS18X20_VERBOSE           0
 
 
 /* return values */
