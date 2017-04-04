@@ -42,23 +42,23 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
-#include <avr/eeprom.h>
+/*#include <avr/eeprom.h>*/
 #include <avr/wdt.h>
 #include <util/delay.h>
-#include <string.h>
-#include <stdint.h>
+/*#include <string.h>*/
+/*#include <stdint.h>*/
 #include <util/atomic.h>
 // #include "uart.h"
 // #include "uart_addon.h"
-// #include "onewire.h"
-// #include "ds18x20.h"
+#include "onewire.h"
+#include "ds18x20.h"
 
 #define BAUD 9600
 
 #define MAXSENSORS 1
 #define NEWLINESTR "\r\n"
 
-/*uint8_t gSensorIDs[MAXSENSORS][OW_ROMCODE_SIZE];*/
+uint8_t gSensorIDs[MAXSENSORS][OW_ROMCODE_SIZE];
 #define MAXNUMBER 17
 uint8_t number[MAXNUMBER] = {		//portb
 	0b11010111,	//0
@@ -85,6 +85,7 @@ uint8_t number[MAXNUMBER] = {		//portb
 // #define DS18X20_ERROR             0x01
 // #define DS18X20_START_FAIL        0x02
 // #define DS18X20_ERROR_CRC         0x03
+#define TESTTIME 1000
 #define NO_ERROR 0
 #define ERROR_NO_SENSOR_START 1
 #define ERROR_NO_SENSOR_AFTER_START 2
@@ -108,6 +109,8 @@ uint8_t number[MAXNUMBER] = {		//portb
 #define BUTTON1 0
 #define BUTTON2 1
 #define ALARM_HEAT 300
+#define RELE_ON PORTD |= (1 << PORTD5)
+#define RELE_OFF PORTD &= ~(1 << PORTD5)
 uint8_t digit[4] = {0b11111011, 0b11111101, 0b11111110, 0b11110111};	//1,2,3,4
 static uint8_t temperature[4] = {0,0,0,0};
 static volatile uint8_t counterDigit = 0;
@@ -128,10 +131,10 @@ static volatile uint8_t err = NO_ERROR;
 static volatile uint8_t temp = 0;
 
 
-#if DS18X20_EEPROMSUPPORT
-static void th_tl_dump(uint8_t *sp);
-static void eeprom_test(void);
-#endif /* DS18X20_EEPROMSUPPORT */
+// #if DS18X20_EEPROMSUPPORT
+// static void th_tl_dump(uint8_t *sp);
+// static void eeprom_test(void);
+// #endif /* DS18X20_EEPROMSUPPORT */
 
 static uint8_t search_sensors(void);
 /*static void uart_put_temp(int16_t decicelsius);*/
@@ -140,6 +143,7 @@ void initDisplay();
 void initTimer1();
 void initTimer2();
 void initButton();
+void initRele();
 void initGenerator();
 void initWDT();
 void disableWDT();
@@ -165,52 +169,38 @@ ISR(TIMER2_COMP_vect){
 	counterDigit += 1;
 }
 
-// ISR(WDT_vect){
-// 	wdt_disable();
-// 	err = ERROR_WDT;
-// }
-
-// void readTempForOnlyDS18b20(){
-// 	uint8_t i, err1, err2;
-// 	for (i = 10; i; i--){
-// 		wdt_reset();
-// 		err1 = DS18X20_start_meas(DS18X20_POWER_EXTERN, NULL); //start measure
-// 		_delay_ms( DS18B20_TCONV_12BIT ); //delay for measure
-// 		err2 = DS18X20_read_decicelsius_single( gSensorIDs[0][0], &decicelsius );
-// 		if (err1 == DS18X20_OK && err2 == DS18X20_OK){
-// 			return;
-// 		}
-// 		_delay_ms(200);
-// 	}
-// 	err = ERROR_NO_SENSOR_AFTER_START;
-// }
+void readTempForOnlyDS18b20(){
+	uint8_t i, err1, err2;
+	for (i = 10; i; i--){
+		wdt_reset();
+		err1 = DS18X20_start_meas(DS18X20_POWER_EXTERN, NULL); //start measure
+		_delay_ms( DS18B20_TCONV_12BIT ); //delay for measure
+		err2 = DS18X20_read_decicelsius_single( gSensorIDs[0][0], &decicelsius );
+		if (err1 == DS18X20_OK && err2 == DS18X20_OK){
+			return;
+		}
+		_delay_ms(200);
+	}
+	err = ERROR_NO_SENSOR_AFTER_START;
+}
 
 
 int main(void)
 {
-	if (MCUCSR & (1 << WDRF)){
-		MCUCSR &= ~(1 << WDRF);
-		disableWDT();
-		err = ERROR_WDT;
-	}
-	uint8_t nSensors, i;
-	
-		
+	uint8_t nSensors;
+			
 /*	uart_init((UART_BAUD_SELECT((BAUD),F_CPU)));*/
 		
-// 	#ifndef OW_ONE_BUS
-// 		ow_set_bus(&PIND,&PORTD,&DDRD,PORTD7);
-// 	#endif
-// 		
+	#ifndef OW_ONE_BUS
+		ow_set_bus(&PIND,&PORTD,&DDRD,PORTD7);
+	#endif
+		
  	sei();
-// 		
-// 	uart_puts_P( NEWLINESTR "DS18X20 1-Wire-Reader Demo by Martin Thomas" NEWLINESTR );
-// 	uart_puts_P(            "-------------------------------------------" );
-// 		
-// 	nSensors = search_sensors();
-// 	if (nSensors == 0){
-// 		err = ERROR_NO_SENSOR_START;
-// 	}
+		
+	nSensors = search_sensors();
+	if (nSensors == 0){
+		err = ERROR_NO_SENSOR_START;
+	}
 // 	uart_put_int( (int)nSensors );
 // 	uart_puts_P( " DS18X20 Sensor(s) available:" NEWLINESTR );
 // 		
@@ -255,38 +245,47 @@ int main(void)
 	initTimer2();
 	initTimer1();
 	initButton();
+	initRele();
 	mode = MODE_NORMAL;
 	_delay_ms(1000);
-	initWDT();
+	
+	if (MCUCSR & (1 << WDRF)){
+		MCUCSR &= ~(1 << WDRF);
+		disableWDT();
+		err = ERROR_WDT;
+	}
+	else{
+		initWDT();
+	}
+/*	_delay_ms(1650);*/
 		
-    while (1) {	
+    while (1) {		
+		wdt_reset();	
  		handleError(err);	
- 		getButtonState(BUTTON1);	
+		getButtonState(BUTTON1);
  		if (buttonStateON[BUTTON1]){
  			buttonStateON[BUTTON1] = 0;
  			mode += 1;
  			if (mode == 4) mode = MODE_NORMAL;
- 		}
- 		wdt_reset();
+		}
  		switch (mode){
  		case MODE_NORMAL:
 			if (millis() - milliseconds_since > 999){
 				milliseconds_since = millis();
-/*				readTempForOnlyDS18b20();*/
+				readTempForOnlyDS18b20();
  				convertTempToDigit(decicelsius, mode);
  				wdt_reset();
-// 				uart_puts_P( NEWLINESTR );
-// 				uart_put_temp( decicelsius );
-// 				uart_puts_P( NEWLINESTR );
  			}
 			if (decicelsius > ALARM_HEAT){
 				err = ERROR_TEMP_OVERHEAT;
 			}
 			if (decicelsius < limitLow){ //heat on
 				heatStatus = HEAT_ON;
+				RELE_ON;
 			}
 			if (decicelsius > limitHigh){ //cool on
 				heatStatus = HEAT_OFF;
+				RELE_OFF;
 			}
 			if (decicelsius > limitLow && decicelsius < limitHigh){ //cool on
 				
@@ -294,10 +293,12 @@ int main(void)
  			break;		
  		case MODE_HIGH:
  			convertTempToDigit(limitHigh, mode);
+			RELE_OFF;
  			wdt_reset();
  			break;		
  		case MODE_LOW:
  			convertTempToDigit(limitLow, mode);
+			RELE_OFF;
  			wdt_reset();
  			break;	
  		default:
@@ -309,6 +310,7 @@ int main(void)
 
 void handleError(uint8_t err){
 	while(err){
+		RELE_OFF;
 		disableWDT();
 		mode = MODE_ERROR;
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
@@ -338,40 +340,39 @@ void handleError(uint8_t err){
 // 	}
 // }
 
-// static uint8_t search_sensors(void)
-// {
-// 	uint8_t i;
-// 	uint8_t id[OW_ROMCODE_SIZE];
-// 	uint8_t diff, nSensors;
-// 	
-// 	uart_puts_P( NEWLINESTR "Scanning Bus for DS18X20" NEWLINESTR );
-// 	
-// 	ow_reset();
-// 
-// 	nSensors = 0;
-// 	
-// 	diff = OW_SEARCH_FIRST;
-// 	while ( diff != OW_LAST_DEVICE && nSensors < MAXSENSORS ) {
-// 		DS18X20_find_sensor( &diff, &id[0] );
-// 		
-// 		if( diff == OW_PRESENCE_ERR ) {
-// 			uart_puts_P( "No Sensor found" NEWLINESTR );
-// 			break;
-// 		}
-// 		
-// 		if( diff == OW_DATA_ERR ) {
-// 			uart_puts_P( "Bus Error" NEWLINESTR );
-// 			break;
-// 		}
-// 		
-// 		for ( i=0; i < OW_ROMCODE_SIZE; i++ )
-// 		gSensorIDs[nSensors][i] = id[i];
-// 		
-// 		nSensors++;
-// 	}	
-// 	return nSensors;
-// }
-// 
+static uint8_t search_sensors(void){
+	uint8_t i;
+	uint8_t id[OW_ROMCODE_SIZE];
+	uint8_t diff, nSensors;
+	
+/*	uart_puts_P( NEWLINESTR "Scanning Bus for DS18X20" NEWLINESTR );*/
+	
+	ow_reset();
+
+	nSensors = 0;
+	
+	diff = OW_SEARCH_FIRST;
+	while ( diff != OW_LAST_DEVICE && nSensors < MAXSENSORS ) {
+		DS18X20_find_sensor( &diff, &id[0] );
+		
+		if( diff == OW_PRESENCE_ERR ) {
+/*			uart_puts_P( "No Sensor found" NEWLINESTR );*/
+			break;
+		}
+		
+		if( diff == OW_DATA_ERR ) {
+/*			uart_puts_P( "Bus Error" NEWLINESTR );*/
+			break;
+		}
+		
+		for ( i=0; i < OW_ROMCODE_SIZE; i++ )
+		gSensorIDs[nSensors][i] = id[i];
+		
+		nSensors++;
+	}	
+	return nSensors;
+}
+
 // static void uart_put_temp(int16_t decicelsius)
 // {
 // 	char s[10];
@@ -433,16 +434,20 @@ unsigned long millis (){
 }
 
 void initWDT(){
-	WDTCR |= (1 << WDP2) | (1 << WDP1) | (1 << WDP0); //reset 2s
-	WDTCR |= (1 << WDCE) | (1 << WDE); //
-	WDTCR |= (1 << WDE);  //wdt_on
+	WDTCR = (1 << WDCE) | (1 << WDE) | (1 << WDP2) | (1 << WDP1) | (1 << WDP0); //reset 2s;
+	WDTCR = (0 << WDCE) | (1 << WDE) | (1 << WDP2) | (1 << WDP1) | (1 << WDP0); //reset 2s;
 	wdt_reset();
 }
 
 void disableWDT(){
 	wdt_reset();
 	WDTCR |= (1 << WDCE) | (1 << WDE);
-	WDTCR &= ~(1 << WDE);
+	WDTCR = 0x00;
+}
+
+void initRele(){
+	RELE_OFF;
+	DDRD |= 0b00100000; //rele-PD5; 
 }
 
 void initButton(){

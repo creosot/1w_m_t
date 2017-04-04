@@ -26,6 +26,7 @@ OW_OUT              0x2               1wire/onewire.o
 OW_PIN_MASK         0x1               1wire/onewire.o
 OW_IN               0x2               1wire/onewire.o
 OW_DDR              0x2               1wire/onewire.o
+gSensorIDs          0x8               main.o
 
 Discarded input sections
 
@@ -34,106 +35,30 @@ Discarded input sections
  .text          0x00000000        0x0 1wire/crc8.o
  .data          0x00000000        0x0 1wire/crc8.o
  .bss           0x00000000        0x0 1wire/crc8.o
- .text.crc8     0x00000000       0x3a 1wire/crc8.o
- .debug_info    0x00000000      0x104 1wire/crc8.o
- .debug_abbrev  0x00000000       0x8b 1wire/crc8.o
- .debug_loc     0x00000000      0x1c0 1wire/crc8.o
- .debug_aranges
-                0x00000000       0x20 1wire/crc8.o
- .debug_ranges  0x00000000       0x10 1wire/crc8.o
- .debug_line    0x00000000       0xf5 1wire/crc8.o
- .debug_str     0x00000000      0x1be 1wire/crc8.o
- .comment       0x00000000       0x31 1wire/crc8.o
- .debug_frame   0x00000000       0x24 1wire/crc8.o
  .text          0x00000000        0x0 1wire/ds18x20.o
  .data          0x00000000        0x0 1wire/ds18x20.o
  .bss           0x00000000        0x0 1wire/ds18x20.o
- .text.DS18X20_raw_to_decicelsius
-                0x00000000      0x12e 1wire/ds18x20.o
  .text.DS18X20_raw_to_maxres
                 0x00000000       0xea 1wire/ds18x20.o
- .text.read_scratchpad
-                0x00000000       0x4c 1wire/ds18x20.o
- .text.DS18X20_find_sensor
-                0x00000000       0x42 1wire/ds18x20.o
  .text.DS18X20_get_power_status
                 0x00000000       0x24 1wire/ds18x20.o
- .text.DS18X20_start_meas
-                0x00000000       0x34 1wire/ds18x20.o
  .text.DS18X20_conversion_in_progress
                 0x00000000        0xe 1wire/ds18x20.o
  .text.DS18X20_format_from_decicelsius
                 0x00000000      0x104 1wire/ds18x20.o
  .text.DS18X20_read_decicelsius
                 0x00000000       0x66 1wire/ds18x20.o
- .text.DS18X20_read_decicelsius_single
-                0x00000000       0x60 1wire/ds18x20.o
  .text.DS18X20_read_maxres
                 0x00000000       0x6a 1wire/ds18x20.o
  .text.DS18X20_read_maxres_single
                 0x00000000       0x64 1wire/ds18x20.o
  .text.DS18X20_format_from_maxres
                 0x00000000      0x168 1wire/ds18x20.o
- .text.DS18X20_write_scratchpad
-                0x00000000       0x4c 1wire/ds18x20.o
- .text.DS18X20_read_scratchpad
-                0x00000000       0x30 1wire/ds18x20.o
- .text.DS18X20_scratchpad_to_eeprom
-                0x00000000       0x4e 1wire/ds18x20.o
- .text.DS18X20_eeprom_to_scratchpad
-                0x00000000       0x36 1wire/ds18x20.o
- .debug_info    0x00000000      0xcde 1wire/ds18x20.o
- .debug_abbrev  0x00000000      0x26a 1wire/ds18x20.o
- .debug_loc     0x00000000     0x147a 1wire/ds18x20.o
- .debug_aranges
-                0x00000000       0xa0 1wire/ds18x20.o
- .debug_ranges  0x00000000       0xa8 1wire/ds18x20.o
- .debug_line    0x00000000      0x768 1wire/ds18x20.o
- .debug_str     0x00000000      0x4de 1wire/ds18x20.o
- .comment       0x00000000       0x31 1wire/ds18x20.o
- .debug_frame   0x00000000      0x2cc 1wire/ds18x20.o
  .text          0x00000000        0x0 1wire/onewire.o
  .data          0x00000000        0x0 1wire/onewire.o
  .bss           0x00000000        0x0 1wire/onewire.o
- .text.ow_input_pin_state
-                0x00000000       0x12 1wire/onewire.o
- .text.ow_parasite_enable
-                0x00000000       0x26 1wire/onewire.o
- .text.ow_bit_io_intern
-                0x00000000       0x88 1wire/onewire.o
  .text.ow_parasite_disable
                 0x00000000       0x2a 1wire/onewire.o
- .text.ow_reset
-                0x00000000       0x88 1wire/onewire.o
- .text.ow_set_bus
-                0x00000000       0x2a 1wire/onewire.o
- .text.ow_bit_io
-                0x00000000        0x8 1wire/onewire.o
- .text.ow_byte_wr
-                0x00000000       0x20 1wire/onewire.o
- .text.ow_byte_wr_with_parasite_enable
-                0x00000000       0x38 1wire/onewire.o
- .text.ow_command_intern
-                0x00000000       0x4e 1wire/onewire.o
- .text.ow_byte_rd
-                0x00000000        0x6 1wire/onewire.o
- .text.ow_rom_search
-                0x00000000       0xa8 1wire/onewire.o
- .text.ow_command
-                0x00000000        0x6 1wire/onewire.o
- .text.ow_command_with_parasite_enable
-                0x00000000        0x6 1wire/onewire.o
- .debug_info    0x00000000      0x81e 1wire/onewire.o
- .debug_abbrev  0x00000000      0x28d 1wire/onewire.o
- .debug_loc     0x00000000      0x68f 1wire/onewire.o
- .debug_aranges
-                0x00000000       0x88 1wire/onewire.o
- .debug_ranges  0x00000000       0x90 1wire/onewire.o
- .debug_line    0x00000000      0x4b0 1wire/onewire.o
- .debug_str     0x00000000      0x325 1wire/onewire.o
- .comment       0x00000000       0x31 1wire/onewire.o
- .debug_frame   0x00000000      0x15c 1wire/onewire.o
- COMMON         0x00000000        0x7 1wire/onewire.o
  .text          0x00000000        0x0 main.o
  .data          0x00000000        0x0 main.o
  .bss           0x00000000        0x0 main.o
@@ -408,7 +333,7 @@ END GROUP
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000      0x518
+.text           0x00000000      0xb88
  *(.vectors)
  .vectors       0x00000000       0x26 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.1.130/gcc/dev/atmega8a/avr4/crtatmega8a.o
                 0x00000000                __vector_default
@@ -486,53 +411,111 @@ END GROUP
                 0x0000005c                __vector_18
                 0x0000005e                . = ALIGN (0x2)
  *(.text.*)
+ .text.crc8     0x0000005e       0x3a 1wire/crc8.o
+                0x0000005e                crc8
+ .text.DS18X20_raw_to_decicelsius
+                0x00000098      0x12e 1wire/ds18x20.o
+ .text.read_scratchpad
+                0x000001c6       0x4c 1wire/ds18x20.o
+ .text.DS18X20_find_sensor
+                0x00000212       0x42 1wire/ds18x20.o
+                0x00000212                DS18X20_find_sensor
+ .text.DS18X20_start_meas
+                0x00000254       0x34 1wire/ds18x20.o
+                0x00000254                DS18X20_start_meas
+ .text.DS18X20_read_decicelsius_single
+                0x00000288       0x60 1wire/ds18x20.o
+                0x00000288                DS18X20_read_decicelsius_single
+ .text.ow_input_pin_state
+                0x000002e8       0x12 1wire/onewire.o
+                0x000002e8                ow_input_pin_state
+ .text.ow_parasite_enable
+                0x000002fa       0x26 1wire/onewire.o
+                0x000002fa                ow_parasite_enable
+ .text.ow_bit_io_intern
+                0x00000320       0x88 1wire/onewire.o
+ .text.ow_reset
+                0x000003a8       0x88 1wire/onewire.o
+                0x000003a8                ow_reset
+ .text.ow_set_bus
+                0x00000430       0x2a 1wire/onewire.o
+                0x00000430                ow_set_bus
+ .text.ow_bit_io
+                0x0000045a        0x8 1wire/onewire.o
+                0x0000045a                ow_bit_io
+ .text.ow_byte_wr
+                0x00000462       0x20 1wire/onewire.o
+                0x00000462                ow_byte_wr
+ .text.ow_byte_wr_with_parasite_enable
+                0x00000482       0x38 1wire/onewire.o
+                0x00000482                ow_byte_wr_with_parasite_enable
+ .text.ow_command_intern
+                0x000004ba       0x4e 1wire/onewire.o
+ .text.ow_byte_rd
+                0x00000508        0x6 1wire/onewire.o
+                0x00000508                ow_byte_rd
+ .text.ow_rom_search
+                0x0000050e       0xa8 1wire/onewire.o
+                0x0000050e                ow_rom_search
+ .text.ow_command
+                0x000005b6        0x6 1wire/onewire.o
+                0x000005b6                ow_command
+ .text.ow_command_with_parasite_enable
+                0x000005bc        0x6 1wire/onewire.o
+                0x000005bc                ow_command_with_parasite_enable
  .text.__vector_6
-                0x0000005e       0x4a main.o
-                0x0000005e                __vector_6
- .text.millis   0x000000a8       0x16 main.o
-                0x000000a8                millis
- .text.initWDT  0x000000be       0x16 main.o
-                0x000000be                initWDT
+                0x000005c2       0x4a main.o
+                0x000005c2                __vector_6
+ .text.readTempForOnlyDS18b20
+                0x0000060c       0x64 main.o
+                0x0000060c                readTempForOnlyDS18b20
+ .text.millis   0x00000670       0x16 main.o
+                0x00000670                millis
+ .text.initWDT  0x00000686        0xc main.o
+                0x00000686                initWDT
  .text.disableWDT
-                0x000000d4       0x10 main.o
-                0x000000d4                disableWDT
+                0x00000692        0xc main.o
+                0x00000692                disableWDT
  .text.handleError
-                0x000000e4       0x52 main.o
-                0x000000e4                handleError
+                0x0000069e       0x54 main.o
+                0x0000069e                handleError
+ .text.initRele
+                0x000006f2        0x6 main.o
+                0x000006f2                initRele
  .text.initButton
-                0x00000136        0xe main.o
-                0x00000136                initButton
+                0x000006f8        0xe main.o
+                0x000006f8                initButton
  .text.initDisplay
-                0x00000144        0xe main.o
-                0x00000144                initDisplay
+                0x00000706        0xe main.o
+                0x00000706                initDisplay
  .text.initTimer1
-                0x00000152       0x20 main.o
-                0x00000152                initTimer1
+                0x00000714       0x20 main.o
+                0x00000714                initTimer1
  .text.initTimer2
-                0x00000172       0x1c main.o
-                0x00000172                initTimer2
+                0x00000734       0x1c main.o
+                0x00000734                initTimer2
  .text.getButtonState
-                0x0000018e       0xb8 main.o
-                0x0000018e                getButtonState
+                0x00000750       0xb8 main.o
+                0x00000750                getButtonState
  .text.setNumber
-                0x00000246       0x32 main.o
-                0x00000246                setNumber
+                0x00000808       0x32 main.o
+                0x00000808                setNumber
  .text.__vector_3
-                0x00000278       0xa2 main.o
-                0x00000278                __vector_3
+                0x0000083a       0xa2 main.o
+                0x0000083a                __vector_3
  .text.convertTempToDigit
-                0x0000031a      0x102 main.o
-                0x0000031a                convertTempToDigit
- .text.main     0x0000041c       0xe0 main.o
-                0x0000041c                main
+                0x000008dc      0x102 main.o
+                0x000008dc                convertTempToDigit
+ .text.main     0x000009de      0x18e main.o
+                0x000009de                main
  .text.libgcc.mul
-                0x000004fc       0x18 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr4\libgcc.a(_umulhisi3.o)
-                0x000004fc                __umulhisi3
-                0x00000514                . = ALIGN (0x2)
+                0x00000b6c       0x18 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr4\libgcc.a(_umulhisi3.o)
+                0x00000b6c                __umulhisi3
+                0x00000b84                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x00000514        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr4\libgcc.a(_exit.o)
-                0x00000514                _exit
-                0x00000514                exit
+ .fini9         0x00000b84        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr4\libgcc.a(_exit.o)
+                0x00000b84                _exit
+                0x00000b84                exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -551,11 +534,11 @@ END GROUP
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x00000514        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr4\libgcc.a(_exit.o)
+ .fini0         0x00000b84        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr4\libgcc.a(_exit.o)
  *(.fini0)
-                0x00000518                _etext = .
+                0x00000b88                _etext = .
 
-.data           0x00800060       0x1c load address 0x00000518
+.data           0x00800060       0x1e load address 0x00000b88
                 0x00800060                PROVIDE (__data_start, .)
  *(.data)
  *(.data*)
@@ -565,57 +548,66 @@ END GROUP
  .data.buttonPrefState
                 0x00800063        0x3 main.o
                 0x00800063                buttonPrefState
- .data.digit    0x00800066        0x4 main.o
-                0x00800066                digit
- .data.number   0x0080006a       0x11 main.o
-                0x0080006a                number
+ .data.decicelsius
+                0x00800066        0x2 main.o
+ .data.digit    0x00800068        0x4 main.o
+                0x00800068                digit
+ .data.number   0x0080006c       0x11 main.o
+                0x0080006c                number
  *(.rodata)
  *(.rodata*)
  *(.gnu.linkonce.d*)
-                0x0080007c                . = ALIGN (0x2)
- *fill*         0x0080007b        0x1 
-                0x0080007c                _edata = .
-                0x0080007c                PROVIDE (__data_end, .)
+                0x0080007e                . = ALIGN (0x2)
+ *fill*         0x0080007d        0x1 
+                0x0080007e                _edata = .
+                0x0080007e                PROVIDE (__data_end, .)
 
-.bss            0x0080007c       0x26
-                0x0080007c                PROVIDE (__bss_start, .)
+.bss            0x0080007e       0x35
+                0x0080007e                PROVIDE (__bss_start, .)
  *(.bss)
  *(.bss*)
- .bss.temp      0x0080007c        0x1 main.o
- .bss.err       0x0080007d        0x1 main.o
+ .bss.temp      0x0080007e        0x1 main.o
+ .bss.err       0x0080007f        0x1 main.o
  .bss.milliseconds_since
-                0x0080007e        0x4 main.o
+                0x00800080        0x4 main.o
  .bss.timer1_millis
-                0x00800082        0x4 main.o
+                0x00800084        0x4 main.o
  .bss.buttonStateOFF
-                0x00800086        0x3 main.o
-                0x00800086                buttonStateOFF
+                0x00800088        0x3 main.o
+                0x00800088                buttonStateOFF
  .bss.buttonStateON
-                0x00800089        0x3 main.o
-                0x00800089                buttonStateON
+                0x0080008b        0x3 main.o
+                0x0080008b                buttonStateON
  .bss.lastDebounceTime
-                0x0080008c        0xc main.o
-                0x0080008c                lastDebounceTime
+                0x0080008e        0xc main.o
+                0x0080008e                lastDebounceTime
  .bss.buttonDebounceState
-                0x00800098        0x3 main.o
-                0x00800098                buttonDebounceState
+                0x0080009a        0x3 main.o
+                0x0080009a                buttonDebounceState
  .bss.heatStatus
-                0x0080009b        0x1 main.o
- .bss.mode      0x0080009c        0x1 main.o
- .bss.counterDigit
                 0x0080009d        0x1 main.o
+ .bss.mode      0x0080009e        0x1 main.o
+ .bss.counterDigit
+                0x0080009f        0x1 main.o
  .bss.temperature
-                0x0080009e        0x4 main.o
+                0x008000a0        0x4 main.o
  *(COMMON)
-                0x008000a2                PROVIDE (__bss_end, .)
-                0x00000518                __data_load_start = LOADADDR (.data)
-                0x00000534                __data_load_end = (__data_load_start + SIZEOF (.data))
+ COMMON         0x008000a4        0x7 1wire/onewire.o
+                0x008000a4                OW_OUT
+                0x008000a6                OW_PIN_MASK
+                0x008000a7                OW_IN
+                0x008000a9                OW_DDR
+ COMMON         0x008000ab        0x8 main.o
+                0x008000ab                gSensorIDs
+                0x008000b3                PROVIDE (__bss_end, .)
+                0x00000b88                __data_load_start = LOADADDR (.data)
+                0x00000ba6                __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x008000a2        0x0
+.noinit         0x008000b3        0x0
                 [!provide]                PROVIDE (__noinit_start, .)
  *(.noinit*)
                 [!provide]                PROVIDE (__noinit_end, .)
-                0x008000a2                _end = .
+                0x008000b3                _end = .
                 [!provide]                PROVIDE (__heap_start, .)
 
 .eeprom         0x00810000        0x0
@@ -657,8 +649,11 @@ END GROUP
 
 .comment        0x00000000       0x30
  *(.comment)
- .comment       0x00000000       0x30 main.o
+ .comment       0x00000000       0x30 1wire/crc8.o
                                  0x31 (size before relaxing)
+ .comment       0x00000030       0x31 1wire/ds18x20.o
+ .comment       0x00000030       0x31 1wire/onewire.o
+ .comment       0x00000030       0x31 main.o
 
 .note.gnu.avr.deviceinfo
                 0x00000000       0x3c
@@ -680,42 +675,69 @@ END GROUP
 .debug_sfnames
  *(.debug_sfnames)
 
-.debug_aranges  0x00000000       0x90
+.debug_aranges  0x00000000      0x1c8
  *(.debug_aranges)
  .debug_aranges
-                0x00000000       0x90 main.o
+                0x00000000       0x20 1wire/crc8.o
+ .debug_aranges
+                0x00000020       0x80 1wire/ds18x20.o
+ .debug_aranges
+                0x000000a0       0x88 1wire/onewire.o
+ .debug_aranges
+                0x00000128       0xa0 main.o
 
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000      0xbe8
+.debug_info     0x00000000     0x214c
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000      0x48c C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.1.130/gcc/dev/atmega8a/avr4/crtatmega8a.o
- .debug_info    0x0000048c      0x75c main.o
+ .debug_info    0x0000048c      0x104 1wire/crc8.o
+ .debug_info    0x00000590      0x9a0 1wire/ds18x20.o
+ .debug_info    0x00000f30      0x81e 1wire/onewire.o
+ .debug_info    0x0000174e      0x9fe main.o
 
-.debug_abbrev   0x00000000      0x734
+.debug_abbrev   0x00000000      0xcff
  *(.debug_abbrev)
  .debug_abbrev  0x00000000      0x44e C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.1.130/gcc/dev/atmega8a/avr4/crtatmega8a.o
- .debug_abbrev  0x0000044e      0x2e6 main.o
+ .debug_abbrev  0x0000044e       0x8b 1wire/crc8.o
+ .debug_abbrev  0x000004d9      0x1f1 1wire/ds18x20.o
+ .debug_abbrev  0x000006ca      0x28d 1wire/onewire.o
+ .debug_abbrev  0x00000957      0x3a8 main.o
 
-.debug_line     0x00000000      0x67a
+.debug_line     0x00000000     0x12f5
  *(.debug_line .debug_line.* .debug_line_end)
  .debug_line    0x00000000      0x109 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.1.130/gcc/dev/atmega8a/avr4/crtatmega8a.o
- .debug_line    0x00000109      0x571 main.o
+ .debug_line    0x00000109       0xf5 1wire/crc8.o
+ .debug_line    0x000001fe      0x5be 1wire/ds18x20.o
+ .debug_line    0x000007bc      0x4b0 1wire/onewire.o
+ .debug_line    0x00000c6c      0x689 main.o
 
-.debug_frame    0x00000000      0x1c8
+.debug_frame    0x00000000      0x5c4
  *(.debug_frame)
- .debug_frame   0x00000000      0x1c8 main.o
+ .debug_frame   0x00000000       0x24 1wire/crc8.o
+ .debug_frame   0x00000024      0x238 1wire/ds18x20.o
+ .debug_frame   0x0000025c      0x15c 1wire/onewire.o
+ .debug_frame   0x000003b8      0x20c main.o
 
-.debug_str      0x00000000      0x4d9
+.debug_str      0x00000000      0x872
  *(.debug_str)
  .debug_str     0x00000000      0x17a C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.1.130/gcc/dev/atmega8a/avr4/crtatmega8a.o
- .debug_str     0x0000017a      0x35f main.o
-                                0x3a2 (size before relaxing)
+ .debug_str     0x0000017a      0x185 1wire/crc8.o
+                                0x1be (size before relaxing)
+ .debug_str     0x000002ff      0x258 1wire/ds18x20.o
+                                0x3f8 (size before relaxing)
+ .debug_str     0x00000557      0x131 1wire/onewire.o
+                                0x325 (size before relaxing)
+ .debug_str     0x00000688      0x1ea main.o
+                                0x446 (size before relaxing)
 
-.debug_loc      0x00000000      0x5b8
+.debug_loc      0x00000000     0x201a
  *(.debug_loc)
- .debug_loc     0x00000000      0x5b8 main.o
+ .debug_loc     0x00000000      0x1c0 1wire/crc8.o
+ .debug_loc     0x000001c0     0x108b 1wire/ds18x20.o
+ .debug_loc     0x0000124b      0x68f 1wire/onewire.o
+ .debug_loc     0x000018da      0x740 main.o
 
 .debug_macinfo
  *(.debug_macinfo)
@@ -735,9 +757,12 @@ END GROUP
 .debug_pubtypes
  *(.debug_pubtypes)
 
-.debug_ranges   0x00000000       0x98
+.debug_ranges   0x00000000      0x1b8
  *(.debug_ranges)
- .debug_ranges  0x00000000       0x98 main.o
+ .debug_ranges  0x00000000       0x10 1wire/crc8.o
+ .debug_ranges  0x00000010       0x70 1wire/ds18x20.o
+ .debug_ranges  0x00000080       0x90 1wire/onewire.o
+ .debug_ranges  0x00000110       0xa8 main.o
 
 .debug_macro
  *(.debug_macro)

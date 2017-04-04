@@ -9,7 +9,7 @@ extern "C" {
 #include <stdint.h>
 
 // DS18x20 EERPROM support disabled(0) or enabled(1) :
-#define DS18X20_EEPROMSUPPORT     1
+#define DS18X20_EEPROMSUPPORT     0
 // decicelsius functions disabled(0) or enabled(1):
 #define DS18X20_DECICELSIUS       1
 // max. resolution functions disabled(0) or enabled(1):
