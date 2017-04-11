@@ -59,7 +59,7 @@
 #define NEWLINESTR "\r\n"
 
 uint8_t gSensorIDs[MAXSENSORS][OW_ROMCODE_SIZE];
-#define MAXNUMBER 17
+#define MAXNUMBER 19
 uint8_t number[MAXNUMBER][2] = {		//portb,portd
 	{0b00111010, 0b01100000},	//0
 	{0b00001010, 0b00000000},	//1
@@ -77,7 +77,9 @@ uint8_t number[MAXNUMBER][2] = {		//portb,portd
 	{0b00100000, 0b00000000},	//13 - defis up
 	{0b00000000, 0b01000000},	//14 - defis down
 	{0b00110100, 0b01100000},	//15 - E
-	{0b00000100, 0b00100000}	//16 - r
+	{0b00000100, 0b00100000},	//16 - r
+	{0b00010100, 0b00000000},	//17 - defis heat plus minus
+	{0b00000100, 0b00000000},	//18 clear plus minus
 };
 
 /* return values */
@@ -91,12 +93,14 @@ uint8_t number[MAXNUMBER][2] = {		//portb,portd
 #define ERROR_TEMP_OVERHEAT 3
 #define ERROR_WDT 4
 #define CLEAR 10
-#define DEFIS_HEAT 11
+#define DEFIS_HEAT DEFIS_UP //11
 #define MINUS 12
 #define DEFIS_UP 13
 #define DEFIS_DOWN 14
 #define E 15
 #define r 16
+#define DEFIS_HEAT_PLUS_MINUS 17
+#define CLEAR_PLUS_MINUS 18
 #define HEAT_ON 1
 #define HEAT_OFF 0
 #define MODE_ERROR 0
@@ -112,10 +116,11 @@ uint8_t digit[4] = {0b00000001, 0b00000010, 0b00000100, 0b00001000};	//1,2,3,4
 static uint8_t temperature[4] = {0};
 static volatile uint8_t counterDigit = 0;
 static int16_t decicelsius = 0;
-static int16_t limitHigh = 260;
-static int16_t limitLow = 250;
+static int16_t limitHigh = 200;
+static int16_t limitLow = 50;
 static volatile uint8_t mode = 0;
 static volatile uint8_t heatStatus = 0;
+static volatile uint8_t minus = 0;
 uint8_t buttonPrefState[2] = {(1<<PORTC4), (1<<PORTC5)}; //PC4,PC5
 uint8_t buttonMask[2] = {(1<<PORTC4), (1<<PORTC5)}; //PC4,PC5
 uint8_t buttonDebounceState[2] = {0,0};
@@ -152,16 +157,40 @@ ISR (TIMER1_COMPA_vect){
 	timer1_millis++;
 }
 
+// ISR(TIMER0_COMPA_vect){
+// 	counterDigit &= 0b00000011;
+// 	temp += 1;
+// 	if (!counterDigit){
+// 		if (heatStatus == HEAT_ON && mode == MODE_NORMAL){
+// 			if (temp & 0b10000000){
+// 				temperature[0] = DEFIS_HEAT;
+// 				if (minus) temperature[0] = DEFIS_HEAT_PLUS_MINUS;
+// 					
+// 			} 
+// 			else{
+// 				temperature[0] = CLEAR;
+// 				if (minus) temperature[0] = CLEAR_PLUS_MINUS;
+// 			} 	
+// 		}
+// 	}
+// 	setNumber(temperature[counterDigit], counterDigit);
+// 	counterDigit += 1;
+// }
+
 ISR(TIMER0_COMPA_vect){
 	counterDigit &= 0b00000011;
 	temp += 1;
-	if (!counterDigit){
-		if (heatStatus == HEAT_ON && mode == MODE_NORMAL){
-			if (temp & 0b10000000) temperature[0] = DEFIS_HEAT;
-			else temperature[0] = CLEAR;
+	if (heatStatus == HEAT_ON){
+		if (temp & 0b10000000){
+			setNumber(CLEAR, counterDigit);
+		}
+		else{
+			setNumber(temperature[counterDigit], counterDigit);
 		}
 	}
-	setNumber(temperature[counterDigit], counterDigit);
+	else{
+		setNumber(temperature[counterDigit], counterDigit);
+	}
 	counterDigit += 1;
 }
 
@@ -298,7 +327,12 @@ int main(void)
 				readTempForOnlyDS18b20();
 				convertTempToDigit(decicelsius, mode);
 				wdt_reset();
-// 				uart_puts_P( NEWLINESTR );
+				uart_putbin_byte(decicelsius >> 8);
+				uart_puts_P( NEWLINESTR );
+				uart_putbin_byte(decicelsius & 0x00FF);
+				uart_puts_P( NEWLINESTR );
+ 				uart_put_int(decicelsius);
+ 				uart_puts_P( NEWLINESTR );
 // 				uart_put_temp( decicelsius );
 // 				uart_puts_P( NEWLINESTR );
 			}
@@ -316,10 +350,12 @@ int main(void)
 			}
 			break;		
 		case MODE_HIGH:
+			heatStatus = HEAT_OFF;
 			convertTempToDigit(limitHigh, mode);
 			wdt_reset();
 			break;		
 		case MODE_LOW:
+			heatStatus = HEAT_OFF;
 			convertTempToDigit(limitLow, mode);
 			wdt_reset();
 			break;	
@@ -331,6 +367,7 @@ int main(void)
 
 void handleError(uint8_t err){
 	while(err){
+		heatStatus = HEAT_OFF;
 		disableWDT();
 		mode = MODE_ERROR;
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
@@ -531,18 +568,26 @@ void setNumber(uint8_t num, uint8_t dig){
 
 void convertTempToDigit(uint16_t t, uint8_t mode){
 	uint16_t temp, d1, d2, d3, d4;
-	temp = t;
+	if (t & 0x8000){
+		 temp = ~t+1;
+		 minus = 1;
+	} 
+	else{
+		temp = t;
+		minus = 0;
+	}
 	d4 = temp/1000;
 	temp = temp - d4*1000;
-	if (t & 0x8000) d4 = 11;
 	d3 = temp/100;
 	temp = temp - d3*100;
 	d2 = temp/10;
 	d1 = temp - d2*10;
 	switch (mode){
 		case MODE_NORMAL:
-			if (d3 == 0 && d4 == 0) d3 = CLEAR;
+			if (d4 == 0 && d3 == 0) d3 = CLEAR;
+			if (d4 == MINUS && d3 == 0) d3 = CLEAR;
 			if (d4 == 0) d4 = CLEAR;
+			if (minus) d4 = MINUS;
 			break;
 		case MODE_HIGH:
 			d4 = DEFIS_UP;
